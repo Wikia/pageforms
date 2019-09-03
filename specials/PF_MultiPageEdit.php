@@ -17,9 +17,6 @@ class PFMultiPageEdit extends SpecialPage {
 	public $mTemplate;
 	public $mForm;
 
-	/**
-	 * Constructor
-	 */
 	function __construct() {
 		parent::__construct( 'MultiPageEdit', 'multipageedit' );
 	}
@@ -59,12 +56,11 @@ class PFMultiPageEdit extends SpecialPage {
 	private function createSpreadsheet( $template_name, $form_name ) {
 		global $wgPageFormsGridParams, $wgPageFormsScriptPath;
 		global $wgPageFormsAutocompleteValues, $wgPageFormsMaxLocalAutocompleteValues;
-		global $wgPageFormsContLangYes, $wgPageFormsContLangNo, $wgPageFormsContLangMonths;
 
 		$out = $this->getOutput();
 		$req = $this->getRequest();
 
-		$out->addModules( 'ext.pageforms.PF_MultiPageEdit' );
+		$out->addModules( 'ext.pageforms.jsgrid' );
 		$text = '';
 		$out->setPageTitle( wfMessage( 'pf_multipageedit_with-name', $this->mTemplate )->text() );
 
@@ -148,18 +144,7 @@ class PFMultiPageEdit extends SpecialPage {
 		$text .= Html::rawElement( 'div', $templateDivAttrs, $loadingImage );
 		$wgPageFormsGridParams[$template_name] = $gridParams;
 
-		// JS variables that hol boolean and date values in wiki's (as
-		// opposed to user's) language.
-		$wgPageFormsContLangYes = wfMessage( 'htmlform-yes' )->inContentLanguage()->text();
-		$wgPageFormsContLangNo = wfMessage( 'htmlform-no' )->inContentLanguage()->text();
-		$monthMessages = array(
-			"january", "february", "march", "april", "may_long", "june",
-			"july", "august", "september", "october", "november", "december"
-		);
-		$wgPageFormsContLangMonths = array( '' );
-		foreach ( $monthMessages as $monthMsg ) {
-			$wgPageFormsContLangMonths[] = wfMessage( $monthMsg )->inContentLanguage()->text();
-		}
+		PFFormUtils::setGlobalVarsForSpreadsheet();
 
 		$text .= "<p><div id='selectLimit'></div></p>";
 
@@ -186,7 +171,7 @@ class SpreadsheetTemplatesPage extends QueryPage {
 	 * @param string $name
 	 */
 	public function __construct( $name = 'MultiPageEdit' ) {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$res = $dbr->select(
 			array( 'page' ),
 			array( 'page_title' ),
@@ -278,7 +263,7 @@ class SpreadsheetTemplatesPage extends QueryPage {
 			$linkRenderer = null;
 		}
 		$sp = SpecialPageFactory::getPage( 'MultiPageEdit' );
-		$text = PFUtils::makeLink( $linkRenderer, $sp->getTitle(), $templateTitle->getText(), array(), array( "template" => $templateTitle->getText(), "form" => $formName ) );
+		$text = PFUtils::makeLink( $linkRenderer, $sp->getPageTitle(), $templateTitle->getText(), array(), array( "template" => $templateTitle->getText(), "form" => $formName ) );
 		return $text;
 	}
 }

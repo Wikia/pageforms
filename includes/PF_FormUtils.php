@@ -358,6 +358,23 @@ END;
 		);
 	}
 
+	public static function setGlobalVarsForSpreadsheet() {
+		global $wgPageFormsContLangYes, $wgPageFormsContLangNo, $wgPageFormsContLangMonths;
+
+		// JS variables that hold boolean and date values in the wiki's
+		// (as opposed to the user's) language.
+		$wgPageFormsContLangYes = wfMessage( 'htmlform-yes' )->inContentLanguage()->text();
+		$wgPageFormsContLangNo = wfMessage( 'htmlform-no' )->inContentLanguage()->text();
+		$monthMessages = array(
+			"january", "february", "march", "april", "may_long", "june",
+			"july", "august", "september", "october", "november", "december"
+		);
+		$wgPageFormsContLangMonths = array( '' );
+		foreach ( $monthMessages as $monthMsg ) {
+			$wgPageFormsContLangMonths[] = wfMessage( $monthMsg )->inContentLanguage()->text();
+		}
+	}
+
 	/**
 	 * Parse the form definition and return it
 	 * @param Parser $parser
@@ -391,7 +408,8 @@ END;
 		// the Parser strip state because the Parser would during parsing replace all strip items and then
 		// mangle them into HTML code. So we have to use our own. Which means we also can not just use
 		// Parser::insertStripItem() (see below).
-		$rnd = wfRandomString( 32 );
+		// Also include a quotation mark, to help avoid security leaks.
+		$rnd = wfRandomString( 16 ) . '"' . wfRandomString( 15 );
 
 		// This regexp will find any PF triple braced tags (including correct handling of contained braces), i.e.
 		// {{{field|foo|default={{Bar}}}}} is not a problem. When used with preg_match and friends, $matches[0] will
@@ -576,7 +594,12 @@ END;
 		if ( is_null( $parser ) ) {
 			return wfMemcKey( 'ext.PageForms.formdefinition', $formId );
 		} else {
-			$optionsHash = $parser->getOptions()->optionsHash( ParserOptions::legacyOptions() );
+			if ( method_exists( ParserOptions::class, 'allCacheVaryingOptions' ) ) {
+				$options = ParserOptions::allCacheVaryingOptions(); // 1.30
+			} else {
+				$options = ParserOptions::legacyOptions();
+			}
+			$optionsHash = $parser->getOptions()->optionsHash( $options );
 			return wfMemcKey( 'ext.PageForms.formdefinition', $formId, $optionsHash );
 		}
 	}

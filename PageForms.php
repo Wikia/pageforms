@@ -69,7 +69,7 @@ if ( defined( 'PF_VERSION' ) ) {
 	return 1;
 }
 
-define( 'PF_VERSION', '4.4.2' );
+define( 'PF_VERSION', '4.5.1' );
 
 $GLOBALS['wgExtensionCredits']['specialpage'][] = array(
 	'path' => __FILE__,
@@ -130,7 +130,6 @@ $GLOBALS['wgHooks']['EditPage::importFormData'][] = 'PFHooks::showFormPreview';
 $GLOBALS['wgHooks']['CargoTablesActionLinks'][] = 'PFHooks::addToCargoTablesLinks';
 $GLOBALS['wgHooks']['TinyMCEDisable'][] = 'PFHooks::disableTinyMCE';
 $GLOBALS['wgHooks']['CanonicalNamespaces'][] = 'PFHooks::registerNamespaces';
-$GLOBALS['wgHooks']['UnitTestsList'][] = 'PFHooks::onUnitTestsList';
 $GLOBALS['wgHooks']['ResourceLoaderRegisterModules'][] = 'PFHooks::registerModules';
 
 if ( defined( 'SMW_VERSION' ) ) {
@@ -267,7 +266,7 @@ $GLOBALS['wgResourceModules'] += array(
 		'dependencies' => array(
 			'jquery.ui.core',
 			'jquery.ui.autocomplete',
-			'jquery.ui.sortable',
+			'ext.pageforms.sortable',
 			'ext.pageforms.autogrow',
 			'mediawiki.util',
 			"mediawiki.api",
@@ -301,13 +300,24 @@ $GLOBALS['wgResourceModules'] += array(
 		'styles' => 'skins/FancyBox/jquery.fancybox.3.2.10.css',
 		'dependencies' => array( 'ext.pageforms.browser' ),
 	),
-	'ext.pageforms.dynatree' => $wgPageFormsResourceTemplate + array(
-		'dependencies' => array( 'jquery.ui.widget' ),
+	'ext.pageforms.fancytree.dep' => $wgPageFormsResourceTemplate + array(
+		'scripts' => 'libs/jquery.fancytree.ui-deps.js',
+		'styles' => 'skins/skin-win8/ui.fancytree.css',
+	),
+	'ext.pageforms.fancytree' => $wgPageFormsResourceTemplate + array(
 		'scripts' => array(
-			'libs/jquery.dynatree.js',
-			'libs/PF_dynatree.js',
+			'libs/jquery.fancytree.js',
+			'libs/PF_tree.js',
 		),
-		'styles' => 'skins/ui.dynatree.css',
+		'styles' => 'skins/skin-win8/ui.fancytree.css',
+		'dependencies' => array(
+			'ext.pageforms.fancytree.dep',
+			'jquery.ui.widget',
+			'jquery.ui.position'
+		 ),
+	),
+	"ext.pageforms.sortable" => $wgPageFormsResourceTemplate + array(
+		'scripts' => 'libs/Sortable.js'
 	),
 	'ext.pageforms.autogrow' => $wgPageFormsResourceTemplate + array(
 		'scripts' => 'libs/PF_autogrow.js',
@@ -406,6 +416,7 @@ $GLOBALS['wgResourceModules'] += array(
 		),
 		'dependencies' => array(
 			'ext.pageforms',
+			'jquery.ui.sortable',
 			'mediawiki.jqueryMsg',
 		),
 		'messages' => array(
@@ -427,6 +438,7 @@ $GLOBALS['wgResourceModules'] += array(
 		'dependencies' => array(
 			'ext.pageforms.select2',
 			'jquery.ui.sortable',
+			'mediawiki.language.months',
 		),
 		'messages' => array(
 			'htmlform-yes',
@@ -480,14 +492,6 @@ $GLOBALS['wgResourceModules'] += array(
 		),
 		'messages' => array(
 			'pf_blank_error',
-		),
-	),
-	'ext.pageforms.PF_MultiPageEdit' => $wgPageFormsResourceTemplate + array(
-		'scripts' => array(
-			'libs/PF_MultiPageEdit.js',
-		),
-		'dependencies' => array(
-			'ext.pageforms.jsgrid'
 		),
 	),
 );
@@ -627,6 +631,7 @@ $GLOBALS['wgPageFormsGridParams'] = array();
 $GLOBALS['wgPageFormsContLangYes'] = null;
 $GLOBALS['wgPageFormsContLangNo'] = null;
 $GLOBALS['wgPageFormsContLangMonths'] = array();
+$GLOBALS['wgPageFormsHeightForMinimizingInstances'] = 800;
 // SMW
 $GLOBALS['wgPageFormsFieldProperties'] = array();
 // Cargo
@@ -638,5 +643,13 @@ $GLOBALS['wgPageFormsDependentFields'] = array();
  */
 $GLOBALS['wgPageFormsCheckboxesSelectAllMinimum'] = 10;
 
+// Allowed namespaces for #autoedit parser function (only pages in these namespaces can be edited via #autoedit)
+$GLOBALS['wgPageFormsAutoeditNamespaces'] = array( 0 );
+
 // Necessary setting for SMW 1.9+
 $GLOBALS['smwgEnabledSpecialPage'][] = 'RunQuery';
+
+// Backward compatibility for MW < 1.28.
+if ( !defined( 'DB_REPLICA' ) ) {
+	define( 'DB_REPLICA', DB_SLAVE );
+}

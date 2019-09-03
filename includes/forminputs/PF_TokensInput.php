@@ -60,7 +60,7 @@ class PFTokensInput extends PFFormInput {
 		return array( 'String' );
 	}
 
-	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, $other_args ) {
+	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, array $other_args ) {
 		global $wgPageFormsTabIndex, $wgPageFormsFieldNum, $wgPageFormsEDSettings;
 
 		$other_args['is_list'] = true;
@@ -98,7 +98,7 @@ class PFTokensInput extends PFFormInput {
 				$wgPageFormsEDSettings[$name]['description'] = $other_args['description'];
 			}
 		} else {
-			list( $autocompleteSettings, $remoteDataType, $delimiter ) = PFTextWithAutocompleteInput::setAutocompleteValues( $other_args );
+			list( $autocompleteSettings, $remoteDataType, $delimiter ) = PFValuesUtils::setAutocompleteValues( $other_args, true );
 		}
 
 		if ( is_array( $cur_value ) ) {

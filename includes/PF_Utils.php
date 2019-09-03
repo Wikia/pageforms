@@ -250,7 +250,7 @@ END;
 			// templates makes that tricky (every form input needs
 			// to re-apply the JS on a new instance) - it can be
 			// done via JS hooks, but it hasn't been done yet.
-			'ext.pageforms.dynatree',
+			'ext.pageforms.fancytree',
 			'ext.pageforms.imagepreview',
 			'ext.pageforms.autogrow',
 			'ext.pageforms.checkboxes',
@@ -282,7 +282,7 @@ END;
 	 * @return string[]
 	 */
 	public static function getAllForms() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$res = $dbr->select( 'page',
 			'page_title',
 			array( 'page_namespace' => PF_NS_FORM,
@@ -375,10 +375,13 @@ END;
 		// Turn each pipe within double curly brackets into another,
 		// unused character (here, "\1"), then do the explode, then
 		// convert them back.
-		$pattern = '/({{.*)\|(.*}})/';
-		while ( preg_match( $pattern, $str, $matches ) ) {
-			$str = preg_replace( $pattern, "$1" . "\1" . "$2", $str );
-		}
+		// regex adapted from:
+		// https://www.regular-expressions.info/recurse.html
+		$pattern = '/{{(?>[^{}]|(?R))*?}}/'; // needed to fix highlighting - <?
+		$str = preg_replace_callback( $pattern, function ( $match ) {
+			$hasPipe = strpos( $match[0], '|' );
+			return $hasPipe ? str_replace( "|", "\1", $match[0] ) : $match[0];
+		}, $str );
 		return array_map( array( 'PFUtils', 'convertBackToPipes' ), self::smartSplitFormTag( $str ) );
 	}
 

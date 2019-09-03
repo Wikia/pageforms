@@ -113,7 +113,8 @@ class PFAutoeditAPI extends ApiBase {
 		} catch ( Exception $e ) {
 			// This has to be Exception, not MWException, due to
 			// DateTime errors and possibly others.
-			$this->logMessage( $e->getMessage(), $e->getCode() );
+			global $wgParser;
+			$this->logMessage( $wgParser->recursiveTagParseFully( $e->getMessage() ), $e->getCode() );
 		}
 
 		$this->finalizeResults();
@@ -864,6 +865,7 @@ class PFAutoeditAPI extends ApiBase {
 
 			// Spoof $wgRequest for PFFormPrinter::formHTML().
 			$wgRequest = new FauxRequest( $this->mOptions, true, \RequestContext::getMain()->getRequest()->getSession() );
+
 			// Call PFFormPrinter::formHTML() to get at the form
 			// HTML of the existing page.
 			list( $formHTML, $targetContent, $form_page_title, $generatedTargetNameFormula ) =

@@ -12,9 +12,6 @@
  */
 class PFRunQuery extends IncludableSpecialPage {
 
-	/**
-	 * Constructor
-	 */
 	function __construct() {
 		parent::__construct( 'RunQuery' );
 	}
@@ -137,10 +134,12 @@ class PFRunQuery extends IncludableSpecialPage {
 			$action = htmlspecialchars( $realTitle->getLocalURL( $queryStringValues ) );
 
 			$fullFormText .= <<<END
-	<form id="pfForm" name="createbox" action="$action" method="post" class="createbox">
+	<form id="pfForm" name="createbox" action="$action" method="get" class="createbox">
 
 END;
 			$fullFormText .= Html::hidden( 'pfRunQueryFormName', $form_name );
+			// Set 'title' as hidden field, in case there's no URL niceness.
+			$fullFormText .= Html::hidden( 'title', PFUtils::titleURLString( $realTitle ) );
 			$fullFormText .= $form_text;
 		}
 

@@ -13,9 +13,6 @@
  */
 class PFCreateForm extends SpecialPage {
 
-	/**
-	 * Constructor
-	 */
 	function __construct() {
 		parent::__construct( 'CreateForm' );
 	}
@@ -56,7 +53,7 @@ class PFCreateForm extends SpecialPage {
 	function doSpecialCreateForm( $query ) {
 		$out = $this->getOutput();
 		$req = $this->getRequest();
-		$db = wfGetDB( DB_SLAVE );
+		$db = wfGetDB( DB_REPLICA );
 
 		if ( !is_null( $query ) ) {
 			$presetFormName = str_replace( '_', ' ', $query );
@@ -284,7 +281,7 @@ class PFCreateForm extends SpecialPage {
 		$text = "\t" . '<form action="" method="post">' . "\n";
 		if ( is_null( $presetFormName ) ) {
 			// Set 'title' field, in case there's no URL niceness
-			$text .= Html::hidden( 'title', $this->getTitle()->getPrefixedText() );
+			$text .= Html::hidden( 'title', $this->getPageTitle()->getPrefixedText() );
 			$text .= "\n\t<p><label>" . wfMessage( 'pf_createform_nameinput' )->escaped() .
 				' ' . wfMessage( 'pf_createform_nameinputdesc' )->escaped() .
 				Html::input( 'form_name', $form_name, 'text', array( 'size' => 25 ) );

@@ -164,14 +164,10 @@ class PFParserFunctions {
 		$curTitle = $parser->getTitle();
 
 		$params = func_get_args();
-		array_shift( $params );
-
-		// Parameters
-		if ( count( $params ) == 0 ) {
-			// Escape!
+		if ( !isset( $params[1] ) ) {
 			return true;
 		}
-		$defaultForm = $params[0];
+		$defaultForm = $params[1];
 
 		$parserOutput = $parser->getOutput();
 		$parserOutput->setProperty( 'PFDefaultForm', $defaultForm );
@@ -484,7 +480,7 @@ class PFParserFunctions {
 	}
 
 	public static function renderAutoEdit( &$parser ) {
-		global $wgContentNamespaces;
+		global $wgPageFormsAutoeditNamespaces;
 
 		$parser->getOutput()->addModules( 'ext.pageforms.autoedit' );
 		$parser->getOutput()->preventClickjacking( true );
@@ -545,20 +541,14 @@ class PFParserFunctions {
 					$targetTitle = Title::newFromText( $value );
 
 					if ( $targetTitle !== null ) {
-						// It seems unnecessary to let
-						// #autoedit be called for non-
-						// content namespaces like
-						// "Template" or "Talk".
-						// $wgContentNamespaces mostly
-						// fits our needs, though it's
-						// slightly too restrictive.
 						$allowedNamespaces = array_merge(
-							$wgContentNamespaces,
+							$wgPageFormsAutoeditNamespaces,
 							array( NS_CATEGORY )
 						);
 						if ( !in_array( $targetTitle->getNamespace(), $allowedNamespaces ) ) {
-							return '<div class="error">Error: Invalid namespace "' .
-								$targetTitle->getNsText() . '"; only content namespaces are allowed for #autoedit.</div>';
+							return '<div class="error">Error: Invalid namespace for "'
+								. $targetTitle->getNsText() . '" detected; see Page Forms\' documentation for help on'
+								. 'configuring #autoedit namespaces using <code>$wgPageFormsAutoeditNamespaces</code>.</div>';
 						}
 						$targetArticle = new Article( $targetTitle );
 						$targetArticle->clear();

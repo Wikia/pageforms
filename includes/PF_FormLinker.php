@@ -23,7 +23,7 @@ class PFFormLinker {
 		}
 
 		$pageID = $title->getArticleID();
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$res = $dbr->select( 'page_props',
 			array(
 				'pp_value'
@@ -143,12 +143,16 @@ class PFFormLinker {
 		// Don't do this if it's a category page - it probably
 		// won't have an associated form.
 		if ( $wgPageFormsLinkAllRedLinksToForms && $target->getNamespace() != NS_CATEGORY ) {
-			$attribs['href'] = $target->getLinkURL( array( 'action' => 'formedit', 'redlink' => '1' ) );
+			// The class of $target can be either Title or
+			// TitleValue.
+			$title = Title::newFromLinkTarget( $target );
+			$attribs['href'] = $title->getLinkURL( array( 'action' => 'formedit', 'redlink' => '1' ) );
 			return true;
 		}
 
 		if ( self::getDefaultFormForNamespace( $namespace ) !== null ) {
-			$attribs['href'] = $target->getLinkURL( array( 'action' => 'formedit', 'redlink' => '1' ) );
+			$title = Title::newFromLinkTarget( $target );
+			$attribs['href'] = $title->getLinkURL( array( 'action' => 'formedit', 'redlink' => '1' ) );
 			return true;
 		}
 
@@ -236,6 +240,12 @@ class PFFormLinker {
 		} else {
 			global $wgContLang;
 			$namespace_labels = $wgContLang->getNamespaces();
+			if ( !array_key_exists( $namespace, $namespace_labels ) ) {
+				// This can happen if it's a custom namespace that
+				// was not entirely correctly declared.
+				self::$formPerNamespace[$namespace] = null;
+				return null;
+			}
 			$namespace_label = $namespace_labels[$namespace];
 		}
 

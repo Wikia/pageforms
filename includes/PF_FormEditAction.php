@@ -23,7 +23,7 @@ class PFFormEditAction extends Action {
 
 	/**
 	 * The main action entry point.  Do all output for display and send it to the context
-	 * output.  Do not use globals $wgOut, $wgRequest, etc, in implementations; use
+	 * output. Do not use globals $wgOut, $wgRequest, etc, in implementations; use
 	 * $this->getOutput(), etc.
 	 * @throws ErrorPageError
 	 * @return false
@@ -130,8 +130,8 @@ class PFFormEditAction extends Action {
 		array_splice( $tab_keys, $edit_tab_location, 0, 'formedit' );
 		array_splice( $tab_values, $edit_tab_location, 0, array( $form_edit_tab ) );
 		$content_actions = array();
-		for ( $i = 0; $i < count( $tab_keys ); $i++ ) {
-			$content_actions[$tab_keys[$i]] = $tab_values[$i];
+		foreach ( $tab_keys as $i => $key ) {
+			$content_actions[$key] = $tab_values[$i];
 		}
 
 		if ( ! $obj->getUser()->isAllowed( 'viewedittab' ) ) {
@@ -220,7 +220,7 @@ class PFFormEditAction extends Action {
 	 * @return int[]
 	 */
 	static function getNumPagesPerForm() {
-		$dbr = wfGetDB( DB_SLAVE );
+		$dbr = wfGetDB( DB_REPLICA );
 		$res = $dbr->select(
 			array( 'category', 'page', 'page_props' ),
 			array( 'pp_value', 'SUM(cat_pages) AS total_pages' ),
@@ -289,7 +289,12 @@ class PFFormEditAction extends Action {
 
 		if ( count( $form_names ) > 1 ) {
 			$warning_text = "\t" . '<div class="warningbox">' . wfMessage( 'pf_formedit_morethanoneform' )->text() . "</div>\n";
-			$output->addWikiText( $warning_text );
+			if ( method_exists( $output, 'addWikiTextAsInterface' ) ) {
+				// MW 1.32+
+				$output->addWikiTextAsInterface( $warning_text );
+			} else {
+				$output->addWikiText( $warning_text );
+			}
 		}
 
 		$form_name = $form_names[0];

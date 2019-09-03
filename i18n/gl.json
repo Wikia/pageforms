@@ -6,7 +6,8 @@
 			"Toliño",
 			"Xosé",
 			"Elisardojm",
-			"Banjo"
+			"Banjo",
+			"Navhy"
 		]
 	},
 	"pageforms-desc": "Formularios para crear e editar páxinas wiki",
@@ -20,7 +21,6 @@
 	"apihelp-pfautocomplete-param-concept": "Un \"concepto\" de MediaWiki Semántica cuxos valores serán completados automaticamente",
 	"apihelp-pfautocomplete-param-cargo_table": "Unha táboa de base de datos, definida pola extensión Cargo, cuxos valores serán completados automaticamente",
 	"apihelp-pfautocomplete-param-cargo_field": "Campo da táboa Cargo cuxos valores serán completados automaticamente",
-	"apihelp-pfautocomplete-param-field_is_array": "Se o campo Cargo especificado contén unha matriz de valores",
 	"apihelp-pfautocomplete-param-namespace": "Un espazo de nomes cuxas páxinas serán completadas automaticamente",
 	"apihelp-pfautocomplete-param-external_url": "Un alias para unha URL externa desde a que obter valores",
 	"apihelp-pfautocomplete-param-baseprop": "Unha antiga propiedade de MediaWiki Semántica a verificar contra o formulario",
@@ -241,7 +241,7 @@
 	"action-viewedittab": "ver a lapela \"{{int:edit}}\" nas páxinas editables mediante formulario",
 	"tooltip-ca-formedit": "Editar esta páxina cun formulario",
 	"pf-select2-no-matches": "Non hai coincidencias",
-	"pf-select2-searching": "Buscando…",
+	"pf-select2-searching": "Procurando…",
 	"pf-select2-input-too-short": "Por favor insira $1 ou máis caracteres.",
 	"pf-select2-selection-too-big": "Este campo non acepta máis de {{PLURAL:$1|$1 valor|$1 valores}}.",
 	"pf-maps-enteraddress": "Introduza o enderezo aquí",

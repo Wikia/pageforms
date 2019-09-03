@@ -19,7 +19,7 @@ class PFHooks {
 			return 1;
 		}
 
-		define( 'PF_VERSION', '4.4.2' );
+		define( 'PF_VERSION', '4.5.1' );
 
 		$GLOBALS['wgPageFormsIP'] = dirname( __DIR__ ) . '/../';
 
@@ -38,6 +38,11 @@ class PFHooks {
 
 		// Necessary setting for SMW 1.9+
 		$GLOBALS['smwgEnabledSpecialPage'][] = 'RunQuery';
+
+		// Backward compatibility for MW < 1.28.
+		if ( !defined( 'DB_REPLICA' ) ) {
+			define( 'DB_REPLICA', DB_SLAVE );
+		}
 	}
 
 	public static function initialize() {
@@ -149,6 +154,7 @@ class PFHooks {
 		global $wgPageFormsFieldProperties, $wgPageFormsCargoFields, $wgPageFormsDependentFields;
 		global $wgPageFormsGridValues, $wgPageFormsGridParams;
 		global $wgPageFormsContLangYes, $wgPageFormsContLangNo, $wgPageFormsContLangMonths;
+		global $wgPageFormsHeightForMinimizingInstances;
 		global $wgPageFormsShowOnSelect, $wgPageFormsScriptPath;
 		global $edgValues, $wgPageFormsEDSettings;
 		global $wgAmericanDates;
@@ -164,6 +170,7 @@ class PFHooks {
 		$vars['wgPageFormsContLangYes'] = $wgPageFormsContLangYes;
 		$vars['wgPageFormsContLangNo'] = $wgPageFormsContLangNo;
 		$vars['wgPageFormsContLangMonths'] = $wgPageFormsContLangMonths;
+		$vars['wgPageFormsHeightForMinimizingInstances'] = $wgPageFormsHeightForMinimizingInstances;
 		$vars['wgPageFormsShowOnSelect'] = $wgPageFormsShowOnSelect;
 		$vars['wgPageFormsScriptPath'] = $wgPageFormsScriptPath;
 		$vars['edgValues'] = $edgValues;
@@ -282,7 +289,7 @@ class PFHooks {
 
 		$sp = SpecialPageFactory::getPage( 'MultiPageEdit' );
 		$editMsg = wfMessage( 'edit' )->text();
-		$text = PFUtils::makeLink( $linkRenderer = null, $sp->getTitle(), $editMsg, array(),
+		$text = PFUtils::makeLink( $linkRenderer = null, $sp->getPageTitle(), $editMsg, array(),
 			array( "template" => $templateName, "form" => $formName ) );
 
 		$indexOfDrilldown = array_search( 'drilldown', array_keys( $actionLinks ) );
@@ -324,8 +331,9 @@ class PFHooks {
 			return true;
 		}
 
+		// The "pfForm" ID is there so the form JS will be activated.
 		$editpage->previewTextAfterContent .= Html::element( 'h2', null, wfMessage( 'pf-preview-header' )->text() ) . "\n" .
-			'<div class="previewnote" style="font-weight: bold">' . $wgOut->parse( wfMessage( 'pf-preview-note' )->text() ) . "</div>\n<hr />\n";
+			'<div id="pfForm" class="previewnote" style="font-weight: bold">' . $wgOut->parse( wfMessage( 'pf-preview-note' )->text() ) . "</div>\n<hr />\n";
 
 		$form_definition = StringUtils::delimiterReplace( '<noinclude>', '</noinclude>', '', $editpage->textbox1 );
 		list( $form_text, $data_text, $form_page_title, $generated_page_name ) =
@@ -371,26 +379,21 @@ class PFHooks {
 	 * @return bool
 	 */
 	public static function setPostEditCookie( &$wikiPage, &$user, $content, $summary, $isMinor, $isWatch, $section, &$flags, $revision, &$status, $baseRevId, $undidRevId = 0 ) {
-		if ( $revision == null || ( defined( 'MW_API' ) && MW_API == true ) ) {
+		if ( $revision == null ) {
 			return true;
 		}
+
+		// Have this take effect only if the save came from a form -
+		// we need to use a global variable to determine that.
+		global $wgPageFormsFormPrinter;
+		if ( property_exists( $wgPageFormsFormPrinter, 'mInputTypeHooks' ) ) {
+			return true;
+		}
+
 		// Code based on EditPage::setPostEditCookie().
 		$postEditKey = EditPage::POST_EDIT_COOKIE_KEY_PREFIX . $revision->getID();
 		$response = RequestContext::getMain()->getRequest()->response();
 		$response->setCookie( $postEditKey, 'saved', time() + EditPage::POST_EDIT_COOKIE_DURATION );
-		return true;
-	}
-
-	/**
-	 * Hook to add PHPUnit test cases.
-	 * From https://www.mediawiki.org/wiki/Manual:PHP_unit_testing/Writing_unit_tests_for_extensions
-	 *
-	 * @param string[] &$files
-	 * @return bool
-	 */
-	public static function onUnitTestsList( &$files ) {
-		$testDir = dirname( __DIR__ ) . '/tests/phpunit/includes';
-		$files = array_merge( $files, glob( "$testDir/*Test.php" ) );
 		return true;
 	}
 }
