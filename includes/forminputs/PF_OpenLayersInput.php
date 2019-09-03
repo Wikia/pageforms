@@ -46,13 +46,18 @@ class PFOpenLayersInput extends PFFormInput {
 		return $width;
 	}
 
-	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, $other_args ) {
+	public static function getHTML( $cur_value, $input_name, $is_mandatory, $is_disabled, array $other_args ) {
 		global $wgPageFormsFieldNum, $wgPageFormsTabIndex;
 		global $wgOut, $wgPageFormsMapsWithFeeders;
 
-		if ( !ExtensionRegistry::getInstance()->isLoaded( 'OpenLayers' ) ) {
+		if ( version_compare( $GLOBALS['wgVersion'], '1.26c', '>' ) &&
+			ExtensionRegistry::getInstance()->isLoaded( 'OpenLayers' )
+		) {
+			$wgOut->addModuleStyles( 'ext.openlayers.main' );
+			$wgOut->addModuleScripts( 'ext.openlayers.main' );
+		} else {
 			$scripts = array(
-				"http://www.openlayers.org/api/OpenLayers.js"
+				"https://www.openlayers.org/api/OpenLayers.js"
 			);
 			$scriptsHTML = '';
 			foreach ( $scripts as $script ) {
@@ -60,6 +65,7 @@ class PFOpenLayersInput extends PFFormInput {
 			}
 			$wgOut->addHeadItem( $scriptsHTML, $scriptsHTML );
 		}
+
 		$wgOut->addModules( 'ext.pageforms.maps' );
 
 		// The address input box is not necessary if we are using other form inputs for the address.

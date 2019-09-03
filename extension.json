@@ -1,7 +1,7 @@
 {
 	"@Note": "When updating this file please also update PageForms.php with the same changes.",
 	"name": "Page Forms",
-	"version": "4.4.2",
+	"version": "4.5.1",
 	"author": [
 		"Yaron Koren",
 		"Stephan Gambke",
@@ -166,7 +166,7 @@
 			"dependencies": [
 				"jquery.ui.core",
 				"jquery.ui.autocomplete",
-				"jquery.ui.sortable",
+				"ext.pageforms.sortable",
 				"ext.pageforms.autogrow",
 				"mediawiki.util",
 				"mediawiki.api",
@@ -206,15 +206,29 @@
 				"ext.pageforms.browser"
 			]
 		},
-		"ext.pageforms.dynatree": {
-			"dependencies": [
-				"jquery.ui.widget"
-			],
+		"ext.pageforms.fancytree.dep": {
 			"scripts": [
-				"libs/jquery.dynatree.js",
-				"libs/PF_dynatree.js"
+				"libs/jquery.fancytree.ui-deps.js"
 			],
-			"styles": "skins/ui.dynatree.css"
+			"styles": "skins/skin-win8/ui.fancytree.css"
+
+		},
+		"ext.pageforms.fancytree": {
+			"scripts": [
+				"libs/jquery.fancytree.js",
+				"libs/PF_tree.js"
+			],
+			"styles": "skins/skin-win8/ui.fancytree.css",
+			"dependencies": [
+				"ext.pageforms.fancytree.dep",
+				"jquery.ui.widget",
+				"jquery.ui.position"
+			]
+		},
+		"ext.pageforms.sortable": {
+			"scripts": [
+				"libs/Sortable.js"
+			]
 		},
 		"ext.pageforms.autogrow": {
 			"scripts": [
@@ -329,6 +343,7 @@
 			],
 			"dependencies": [
 				"ext.pageforms",
+				"jquery.ui.sortable",
 				"mediawiki.jqueryMsg"
 			],
 			"messages": [
@@ -349,7 +364,8 @@
 			],
 			"dependencies": [
 				"ext.pageforms.select2",
-				"jquery.ui.sortable"
+				"jquery.ui.sortable",
+				"mediawiki.language.months"
 			],
 			"messages": [
 				"htmlform-yes",
@@ -404,14 +420,6 @@
 			"messages": [
 				"pf_blank_error"
 			]
-		},
-		"ext.pageforms.PF_MultiPageEdit": {
-			"scripts": [
-				"libs/PF_MultiPageEdit.js"
-			],
-			"dependencies": [
-				"ext.pageforms.jsgrid"
-			]
 		}
 	},
 	"ResourceFileModulePaths": {
@@ -447,9 +455,6 @@
 		"CanonicalNamespaces": [
 			"PFHooks::registerNamespaces"
 		],
-		"UnitTestsList": [
-			"PFHooks::onUnitTestsList"
-		],
 		"ResourceLoaderRegisterModules": [
 			"PFHooks::registerModules"
 		]
@@ -480,6 +485,7 @@
 		"PageFormsContLangYes": null,
 		"PageFormsContLangNo": null,
 		"PageFormsContLangMonths": [],
+		"PageFormsHeightForMinimizingInstances": 800,
 		"PageFormsFieldProperties": [],
 		"PageFormsCargoFields": [],
 		"PageFormsDependentFields": [],
@@ -496,7 +502,8 @@
 			"DisabledDates": null,
 			"HighlightedDates": null,
 			"_merge_strategy": "array_plus"
-		}
+		},
+		"PageFormsAutoeditNamespaces": [ 0 ]
 	},
 	"manifest_version": 1
 }

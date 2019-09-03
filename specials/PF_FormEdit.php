@@ -17,9 +17,6 @@ class PFFormEdit extends UnlistedSpecialPage {
 	public $mForm;
 	public $mError;
 
-	/**
-	 * Constructor
-	 */
 	function __construct() {
 		parent::__construct( 'FormEdit' );
 	}
@@ -48,17 +45,17 @@ class PFFormEdit extends UnlistedSpecialPage {
 		$fe = SpecialPageFactory::getPage( 'FormEdit' );
 		$fe_url = $fe->getPageTitle()->getFullURL();
 		$i = 0;
-		if ( is_iterable( $alt_forms ) ) {
-			foreach ( $alt_forms as $alt_form ) {
-				if ( $i++ > 0 ) {
-					$text .= ', ';
-				}
-				$altFormURL = $fe_url . '/' . $alt_form . '/' . $target_name;
-				$text .= Html::element( 'a',
-					array( 'href' => $altFormURL ),
-					str_replace( '_', ' ', $alt_form )
-				);
-			}
+        if ( is_iterable( $alt_forms ) ) {
+            foreach ( $alt_forms as $alt_form ) {
+                if ( $i++ > 0 ) {
+                    $text .= ', ';
+                }
+                $altFormURL = $fe_url . '/' . $alt_form . '/' . $target_name;
+                $text .= Html::element( 'a',
+                    array( 'href' => $altFormURL ),
+                    str_replace( '_', ' ', $alt_form )
+                );
+            }
 		}
 		return $text;
 	}
@@ -158,7 +155,7 @@ class PFFormEdit extends UnlistedSpecialPage {
 			// "Creating ..." and "Create ...", respectively.
 			// Does this make any difference? Who knows.
 			$pageTitle = wfMessage( 'creating', $targetName )->text();
-		} elseif ( $result[ 'form' ] == '' ) {  // FIXME: This looks weird; a simple else should be enough, right?
+		} elseif ( $result[ 'form' ] == '' ) { // FIXME: This looks weird; a simple else should be enough, right?
 			// display error message if the form is not specified in the URL
 			$pageTitle = wfMessage( 'formedit' )->text();
 			$text .= Html::element( 'p', array( 'class' => 'error' ), wfMessage( 'pf_formedit_badurl' )->text() ) . "\n";

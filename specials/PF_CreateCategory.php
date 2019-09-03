@@ -13,9 +13,6 @@
  */
 class PFCreateCategory extends SpecialPage {
 
-	/**
-	 * Constructor
-	 */
 	function __construct() {
 		parent::__construct( 'CreateCategory' );
 	}
@@ -85,7 +82,7 @@ class PFCreateCategory extends SpecialPage {
 		$text = "\t" . '<form action="" method="post">' . "\n";
 		$firstRow = '';
 		if ( is_null( $presetCategoryName ) ) {
-			$text .= "\t" . Html::hidden( 'title', $this->getTitle()->getPrefixedText() ) . "\n";
+			$text .= "\t" . Html::hidden( 'title', $this->getPageTitle()->getPrefixedText() ) . "\n";
 			$firstRow .= wfMessage( 'pf_createcategory_name' )->escaped() . ' ' .
 				Html::input( 'category_name', null, 'text',
 					array( 'size' => 25 ) ) . "\n";
@@ -104,7 +101,7 @@ class PFCreateCategory extends SpecialPage {
 		$firstRow .= Html::rawElement( 'select',
 			array( 'id' => 'form_dropdown', 'name' => 'default_form' ),
 			$formSelector );
-		$text .= Html::rawElement( 'p', null, $firstRow )  . "\n";
+		$text .= Html::rawElement( 'p', null, $firstRow ) . "\n";
 		$secondRow = wfMessage( 'pf_createcategory_makesubcategory' )->escaped() . ' ';
 		$selectBody = "\t" . Html::element( 'option', null, null ). "\n";
 		$categories = PFValuesUtils::getAllCategories();

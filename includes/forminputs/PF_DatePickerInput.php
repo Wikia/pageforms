@@ -19,7 +19,7 @@ class PFDatePickerInput extends PFFormInput {
 	 * @param array $other_args An associative array of other parameters that were present in the
 	 *  input definition.
 	 */
-	public function __construct( $input_number, $cur_value, $input_name, $disabled, $other_args ) {
+	public function __construct( $input_number, $cur_value, $input_name, $disabled, array $other_args ) {
 		if ( $cur_value == 'now' ) {
 			$cur_value = date( 'Y/m/d' );
 		}
@@ -236,8 +236,9 @@ class PFDatePickerInput extends PFFormInput {
 				$maxDate = null;
 			}
 
-			// find allowed values and invert them to get disabled values
-			if ( array_key_exists( 'possible_values', $this->mOtherArgs ) && count( $this->mOtherArgs['possible_values'] ) ) {
+			// Find allowed values and invert them to get disabled values.
+			// This value can be null, or an empty array - empty() checks for both.
+			if ( !empty( $this->mOtherArgs['possible_values'] ) ) {
 				$enabledDates = self::sortAndMergeRanges( self::createRangesArray( $this->mOtherArgs['possible_values'] ) );
 
 				// correct min/max date to the first/last allowed value
@@ -307,7 +308,7 @@ class PFDatePickerInput extends PFFormInput {
 			} elseif ( $wgPageFormsDatePickerSettings["HighlightedDates"] ) {
 				$highlightedDates = self::sortAndMergeRanges( self::createRangesArray( explode( ',', $wgPageFormsDatePickerSettings["HighlightedDates"] ) ) );
 			} else {
-				$highlightedDates = null;
+				$highlightedDates = array();
 			}
 
 			// find disabled week days and mark them in an array
@@ -326,7 +327,7 @@ class PFDatePickerInput extends PFFormInput {
 					}
 				}
 			} else {
-				$disabledDays = null;
+				$disabledDays = array();
 			}
 
 			// find highlighted week days and mark them in an array
@@ -345,7 +346,7 @@ class PFDatePickerInput extends PFFormInput {
 					}
 				}
 			} else {
-				$highlightedDays = null;
+				$highlightedDays = array();
 			}
 
 			// set first day of the week
@@ -524,7 +525,7 @@ class PFDatePickerInput extends PFFormInput {
 	 */
 	private static function invertRangesArray( $ranges ) {
 		// the result (initially empty)
-		$invRanges = null;
+		$invRanges = array();
 
 		// the minimum of the current gap (initially none)
 		$min = null;

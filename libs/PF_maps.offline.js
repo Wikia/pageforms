@@ -145,8 +145,7 @@ function setupMapFormInput( inputDiv, mapService ) {
 			numClicks++;
 			if (numClicks === 1) {
 				timer = setTimeout( function() {
-					var opx = map.getLayerPxFromViewPortPx(e.xy) ;
-					var loc = map.getLonLatFromPixel( opx );
+					var loc = map.getLonLatFromPixel( e.xy );
 					openLayersSetMarker( loc );
 					numClicks = 0;
 				});
@@ -236,6 +235,7 @@ function setupMapFormInput( inputDiv, mapService ) {
 		var addressText = inputDiv.find('.pfAddressInput').val(),
 			alert;
 		if ( mapService === "Google Maps" ) {
+			map.setZoom(14);
 			geocoder.geocode( { 'address': addressText }, function(results, status) {
 				if (status === google.maps.GeocoderStatus.OK) {
 					map.setCenter(results[0].geometry.location);
@@ -298,7 +298,6 @@ function setupMapFormInput( inputDiv, mapService ) {
 
 	if ( coordsInput.val() !== '' ) {
 		setMarkerFromCoordinates();
-		map.setZoom(14);
 	}
 }
 

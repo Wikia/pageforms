@@ -13,6 +13,10 @@
  * @ingroup PF
  */
 class PFFormField {
+
+	/**
+	 * @var PFTemplateField
+	 */
 	public $template_field;
 	private $mInputType;
 	private $mIsMandatory;
@@ -38,7 +42,12 @@ class PFFormField {
 	private $mInputName;
 	private $mIsDisabled;
 
-	static function create( $template_field ) {
+	/**
+	 * @param PFTemplateField $template_field
+	 *
+	 * @return self
+	 */
+	static function create( PFTemplateField $template_field ) {
 		$f = new PFFormField();
 		$f->template_field = $template_field;
 		$f->mInputType = null;
@@ -53,10 +62,16 @@ class PFFormField {
 		return $f;
 	}
 
+	/**
+	 * @return PFTemplateField
+	 */
 	public function getTemplateField() {
 		return $this->template_field;
 	}
 
+	/**
+	 * @param PFTemplateField $templateField
+	 */
 	public function setTemplateField( $templateField ) {
 		$this->template_field = $templateField;
 	}
@@ -180,6 +195,8 @@ class PFFormField {
 		$cargo_table = $cargo_field = null;
 		$show_on_select = array();
 		$fullFieldName = $template_name . '[' . $field_name . ']';
+		$values = $valuesSourceType = $valuesSource = null;
+
 		// Cycle through the other components.
 		for ( $i = 2; $i < count( $tag_components ); $i++ ) {
 			$component = trim( $tag_components[$i] );
@@ -255,28 +272,21 @@ class PFFormField {
 					$propertyName = $sub_components[1];
 					$f->mPossibleValues = PFValuesUtils::getAllValuesForProperty( $propertyName );
 				} elseif ( $sub_components[0] == 'values from query' ) {
-					$pages = PFValuesUtils::getAllPagesForQuery( $sub_components[1] );
-					foreach ( $pages as $page ) {
-						$page_name_for_values = $page->getDbKey();
-						$f->mPossibleValues[] = $page_name_for_values;
-					}
+					$valuesSourceType = 'query';
+					$valuesSource = $sub_components[1];
 				} elseif ( $sub_components[0] == 'values from category' ) {
+					$valuesSource = $sub_components[1];
 					global $wgCapitalLinks;
-					$category_name = $sub_components[1];
 					if ( $wgCapitalLinks ) {
-						$category_name = ucfirst( $category_name );
+						$valuesSource = ucfirst( $valuesSource );
 					}
-					$f->mPossibleValues = PFValuesUtils::getAllPagesForCategory( $category_name, 10 );
-					global $wgPageFormsUseDisplayTitle;
-					$f->mUseDisplayTitle = $wgPageFormsUseDisplayTitle;
+					$valuesSourceType = 'category';
 				} elseif ( $sub_components[0] == 'values from concept' ) {
-					$f->mPossibleValues = PFValuesUtils::getAllPagesForConcept( $sub_components[1] );
-					global $wgPageFormsUseDisplayTitle;
-					$f->mUseDisplayTitle = $wgPageFormsUseDisplayTitle;
+					$valuesSourceType = 'concept';
+					$valuesSource = $sub_components[1];
 				} elseif ( $sub_components[0] == 'values from namespace' ) {
-					$f->mPossibleValues = PFValuesUtils::getAllPagesForNamespace( $sub_components[1] );
-					global $wgPageFormsUseDisplayTitle;
-					$f->mUseDisplayTitle = $wgPageFormsUseDisplayTitle;
+					$valuesSourceType = 'namespace';
+					$valuesSource = $sub_components[1];
 				} elseif ( $sub_components[0] == 'values dependent on' ) {
 					global $wgPageFormsDependentFields;
 					$wgPageFormsDependentFields[] = array( $sub_components[1], $fullFieldName );
@@ -320,6 +330,14 @@ class PFFormField {
 			}
 		} // end for
 
+		if ( $valuesSourceType !== null ) {
+			$f->mPossibleValues = PFValuesUtils::getAutocompleteValues( $valuesSource, $valuesSourceType );
+			if ( in_array( $valuesSourceType, array( 'category', 'namespace', 'concept' ) ) ) {
+				global $wgPageFormsUseDisplayTitle;
+				$f->mUseDisplayTitle = $wgPageFormsUseDisplayTitle;
+			}
+		}
+
 		if ( !array_key_exists( 'delimiter', $f->mFieldArgs ) ) {
 			$delimiterFromTemplate = $f->getTemplateField()->getDelimiter();
 			if ( $delimiterFromTemplate == '' ) {
@@ -333,7 +351,7 @@ class PFFormField {
 
 		// If the 'values' parameter was set, separate it based on the
 		// 'delimiter' parameter, if any.
-		if ( ! empty( $values ) ) {
+		if ( $values != null ) {
 			// Remove whitespaces, and un-escape characters
 			$valuesArray = array_map( 'trim', explode( $delimiter, $values ) );
 			$f->mPossibleValues = array_map( 'htmlspecialchars_decode', $valuesArray );
@@ -353,18 +371,37 @@ class PFFormField {
 			$f->mPossibleValues = array_filter( $cargoValues, 'strlen' );
 		}
 
+		$mappingType = null;
 		if ( !is_null( $f->mPossibleValues ) ) {
 			if ( array_key_exists( 'mapping template', $f->mFieldArgs ) ) {
-				$f->setValuesWithMappingTemplate();
+				$mappingType = 'template';
 			} elseif ( array_key_exists( 'mapping property', $f->mFieldArgs ) ) {
-				$f->setValuesWithMappingProperty();
+				$mappingType = 'property';
 			} elseif ( array_key_exists( 'mapping cargo table', $f->mFieldArgs ) &&
 				array_key_exists( 'mapping cargo field', $f->mFieldArgs ) ) {
-				$f->setValuesWithMappingCargoField();
+				$mappingType = 'cargo field';
 			} elseif ( $f->mUseDisplayTitle ) {
 				$f->mPossibleValues = PFValuesUtils::disambiguateLabels( $f->mPossibleValues );
 			}
 		}
+
+		if ( $mappingType !== null && !empty( $f->mPossibleValues ) ) {
+			// If we're going to be mapping values, we need to have
+			// the exact page name - and if these values come from
+			// "values from namespace", the namespace prefix was
+			// not included, so we need to add it now.
+			if ( $valuesSourceType == 'namespace' && $valuesSource != '' && $valuesSource != 'Main' ) {
+				foreach ( $f->mPossibleValues as $index => &$value ) {
+					$value = $valuesSource .  ':' . $value;
+				}
+				// Has to be set to false to not mess up the
+				// handling.
+				$f->mUseDisplayTitle = false;
+			}
+
+			$f->setMappedValues( $mappingType );
+		}
+
 		if ( $template_in_form->allowsMultiple() ) {
 			$f->mFieldArgs['part_of_multiple'] = true;
 		}
@@ -518,6 +555,18 @@ class PFFormField {
 		return null;
 	}
 
+	function setMappedValues( $mappingType ) {
+		if ( $mappingType == 'template' ) {
+			$this->setValuesWithMappingTemplate();
+		} elseif ( $mappingType == 'property' ) {
+			$this->setValuesWithMappingProperty();
+		} elseif ( $mappingType == 'cargo field' ) {
+			$this->setValuesWithMappingCargoField();
+		}
+
+		$this->mPossibleValues = PFValuesUtils::disambiguateLabels( $this->mPossibleValues );
+	}
+
 	/**
 	 * Helper function to get an array of labels from an array of values
 	 * given a mapping template.
@@ -545,7 +594,7 @@ class PFFormField {
 				$labels[$value] = $value;
 			}
 		}
-		$this->mPossibleValues = PFValuesUtils::disambiguateLabels( $labels );
+		$this->mPossibleValues = $labels;
 	}
 
 	/**
@@ -553,12 +602,6 @@ class PFFormField {
 	 * given a mapping property.
 	 */
 	function setValuesWithMappingProperty() {
-		// Error-handling.
-		if ( !is_array( $this->mPossibleValues ) ) {
-			$this->mPossibleValues = array();
-			return;
-		}
-
 		$store = PFUtils::getSMWStore();
 		if ( $store == null ) {
 			return;
@@ -579,7 +622,7 @@ class PFFormField {
 				}
 			}
 		}
-		$this->mPossibleValues = PFValuesUtils::disambiguateLabels( $labels );
+		$this->mPossibleValues = $labels;
 	}
 
 	/**
@@ -599,10 +642,10 @@ class PFFormField {
 				'_pageName="' . $value . '"'
 			);
 			if ( count( $vals ) > 0 ) {
-				$labels[$value] = trim( $vals[0] );
+				$labels[$value] = html_entity_decode( trim( $vals[0] ) );
 			}
 		}
-		$this->mPossibleValues = PFValuesUtils::disambiguateLabels( $labels );
+		$this->mPossibleValues = $labels;
 	}
 
 	/**
@@ -798,7 +841,7 @@ class PFFormField {
 		return $text;
 	}
 
-	function getArgumentsForInputCallSMW( &$other_args ) {
+	function getArgumentsForInputCallSMW( array &$other_args ) {
 		if ( $this->template_field->getSemanticProperty() !== '' &&
 			! array_key_exists( 'semantic_property', $other_args ) ) {
 			$other_args['semantic_property'] = $this->template_field->getSemanticProperty();
@@ -819,7 +862,7 @@ class PFFormField {
 		}
 	}
 
-	function getArgumentsForInputCallCargo( &$other_args ) {
+	function getArgumentsForInputCallCargo( array &$other_args ) {
 		$fullCargoField = $this->template_field->getFullCargoField();
 		if ( $fullCargoField !== null &&
 			! array_key_exists( 'full_cargo_field', $other_args ) ) {
@@ -846,7 +889,7 @@ class PFFormField {
 	 * @param array|null $default_args
 	 * @return array
 	 */
-	function getArgumentsForInputCall( $default_args = null ) {
+	function getArgumentsForInputCall( array $default_args = null ) {
 		// start with the arguments array already defined
 		$other_args = $this->mFieldArgs;
 		// a value defined for the form field should always supersede
