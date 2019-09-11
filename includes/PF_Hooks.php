@@ -391,9 +391,11 @@ class PFHooks {
 		}
 
 		// Code based on EditPage::setPostEditCookie().
-		$postEditKey = EditPage::POST_EDIT_COOKIE_KEY_PREFIX . $revision->getID();
-		$response = RequestContext::getMain()->getRequest()->response();
-		$response->setCookie( $postEditKey, 'saved', time() + EditPage::POST_EDIT_COOKIE_DURATION );
+		if ( !defined( 'MW_API' ) || MW_API !== true ) {
+			$postEditKey = EditPage::POST_EDIT_COOKIE_KEY_PREFIX . $revision->getID();
+			$response = RequestContext::getMain()->getRequest()->response();
+			$response->setCookie( $postEditKey, 'saved', time() + EditPage::POST_EDIT_COOKIE_DURATION );
+		}
 		return true;
 	}
 }
