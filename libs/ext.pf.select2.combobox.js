@@ -43,13 +43,16 @@
 		input_id = "#" + input_id;
 		var input_tagname = $(input_id).prop( "tagName" );
 		var autocomplete_opts = this.getAutocompleteOpts();
+		var self = this;
 
 		if ( autocomplete_opts.autocompletedatatype !== undefined ) {
 			opts.ajax = this.getAjaxOpts();
 			opts.minimumInputLength = 1;
 			opts.formatInputTooShort = mw.msg( "pf-select2-input-too-short", opts.minimumInputLength );
 			opts.formatSelection = this.formatSelection;
-			opts.escapeMarkup = function (m) { return m; };
+			opts.escapeMarkup = function (m) {
+				return self.escapeMarkupAndAddHTML(m);
+			};
 		} else if ( input_tagname === "INPUT" ) {
 			opts.data = this.getData( autocomplete_opts.autocompletesettings );
 		}
